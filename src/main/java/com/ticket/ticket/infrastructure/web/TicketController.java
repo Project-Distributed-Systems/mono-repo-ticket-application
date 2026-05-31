@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ticket.ticket.application.event.CancelTicketUseCase;
 import com.ticket.ticket.application.event.CreateTicketUseCase;
-import com.ticket.ticket.application.event.PayTicketUseCase;
 import com.ticket.ticket.application.event.ViewActiveTicketUseCase;
 import com.ticket.ticket.application.event.dto.CreateTicketCommand;
 import com.ticket.ticket.application.event.dto.TicketResponse;
@@ -28,14 +27,12 @@ public class TicketController {
   private final CreateTicketUseCase createTicketUseCase;
   private final CancelTicketUseCase cancelTicketUseCase;
   private final ViewActiveTicketUseCase viewActiveTicketUseCase;
-  private final PayTicketUseCase payTicketUseCase;
 
   public TicketController(CreateTicketUseCase createTicketUseCase, CancelTicketUseCase cancelTicketUseCase,
-      ViewActiveTicketUseCase view, PayTicketUseCase pay) {
+      ViewActiveTicketUseCase view) {
     this.createTicketUseCase = createTicketUseCase;
     this.cancelTicketUseCase = cancelTicketUseCase;
     this.viewActiveTicketUseCase = view;
-    this.payTicketUseCase = pay;
   }
 
   @PostMapping
@@ -62,9 +59,4 @@ public class TicketController {
     return ResponseEntity.ok(tickets); // 200
   }
 
-  @GetMapping("/{id}/pay")
-  public ResponseEntity<TicketResponse> payTicket(@PathVariable UUID id) {
-    TicketResponse response = payTicketUseCase.execute(id);
-    return ResponseEntity.ok(response);
-  }
 }

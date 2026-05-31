@@ -4,7 +4,6 @@ import com.ticket.ticket.application.event.dto.CreateTicketCommand;
 import com.ticket.ticket.application.event.dto.TicketResponse;
 import com.ticket.ticket.domain.event.TicketRepository;
 import com.ticket.ticket.domain.event.Ticket;
-import com.ticket.ticket.domain.event.ID;
 import com.ticket.ticket.domain.event.TicketId;
 import com.ticket.ticket.domain.event.TicketState;
 
@@ -13,11 +12,11 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CreateTicketUseCase {
+public class CreatePayedTicketUseCase {
 
   private final TicketRepository ticketRepository;
 
-  public CreateTicketUseCase(TicketRepository ticketRepository) {
+  public CreatePayedTicketUseCase(TicketRepository ticketRepository) {
     this.ticketRepository = ticketRepository;
   }
 

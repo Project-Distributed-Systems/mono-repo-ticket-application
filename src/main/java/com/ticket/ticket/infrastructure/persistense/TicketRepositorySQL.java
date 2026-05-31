@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
 public class TicketRepositorySQL implements TicketRepository {
@@ -35,7 +34,11 @@ public class TicketRepositorySQL implements TicketRepository {
 
   @Override
   public List<Ticket> findActiveTicketBy(ID eventId) {
-    return jpa.findByEventIdAndSituation(eventId.value(), TicketState.ATIVO)
+    Optional<List<TicketEntity>> possibleTicketsEntity = jpa.findByEventIdAndSituation(eventId.value(),
+        TicketState.ATIVO);
+    if (possibleTicketsEntity.isEmpty())
+      return List.of();
+    return possibleTicketsEntity
         .get()
         .stream()
         .map(TicketEntity::toDomain)

@@ -2,7 +2,6 @@ package com.tickets.payment_gateway_mock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,17 +16,13 @@ public class ChargeController {
 
     private static final Logger log = LoggerFactory.getLogger(ChargeController.class);
 
-    // idempotency store: key → chargeId
     private final Map<String, ChargeResponse> idempotencyStore = new ConcurrentHashMap<>();
 
-    @Value("${gateway.failure-rate}")
-    private double failureRate;
+    private final GatewayConfig config;
 
-    @Value("${gateway.latency-ms}")
-    private long latencyMs;
-
-    @Value("${gateway.decline-rate}")
-    private double declineRate;
+    public ChargeController(GatewayConfig config) {
+        this.config = config;
+    }
 
     @PostMapping
     public ResponseEntity<ChargeResponse> charge(@RequestBody ChargeRequest req) throws InterruptedException {
@@ -39,17 +34,17 @@ public class ChargeController {
         }
 
         // simulate latency
-        Thread.sleep(latencyMs);
+        Thread.sleep(config.latencyMs);
 
         // simulate technical failure (503)
-        if (Math.random() < failureRate) {
+        if (Math.random() < config.failureRate) {
             log.warn("Simulating technical failure for order {}", req.orderId());
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(new ChargeResponse(null, "ERROR", req.idempotencyKey()));
         }
 
         // simulate business decline (distinct from technical failure)
-        if (Math.random() < declineRate) {
+        if (Math.random() < config.declineRate) {
             log.warn("Simulating business decline for order {}", req.orderId());
             ChargeResponse declined = new ChargeResponse(
                 UUID.randomUUID().toString(), "DECLINED", req.idempotencyKey());

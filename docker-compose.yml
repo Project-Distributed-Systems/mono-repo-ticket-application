@@ -119,6 +119,7 @@ services:
       RABBITMQ_USER: tickets
       RABBITMQ_PASS: tickets
       EVENT_SERVICE_URL: http://event-service:8080
+      PAYMENT_GATEWAY_URL: http://payment-gateway-mock:8090
     ports:
       - "8081:8081"
     networks:

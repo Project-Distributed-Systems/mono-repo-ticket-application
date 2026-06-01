@@ -25,6 +25,41 @@ curl -X POST http://localhost:8081/orders -H "Content-Type: application/json" -d
 
 ###
 
+# happy path
+curl -X POST http://localhost:8081/orders/1/pay -H "Content-Type: application/json" -d "{\"paymentMethod\":\"CREDIT_CARD\",\"amount\":200.00}"
+
+# trip the breaker = failure rate to 100%
+curl -X POST http://localhost:8090/admin/mode -H "Content-Type: application/json" -d "{\"failureRate\":1.0}"
+
+# recover
+curl -X POST http://localhost:8090/admin/mode -H "Content-Type: application/json" -d "{\"failureRate\":0.0}"
+
+###
+
+# 1. create user, event, order fresh
+curl -X POST http://localhost:8081/users -H "Content-Type: application/json" -d "{\"email\":\"leo@test.com\",\"name\":\"Leonardo\"}"
+curl -X POST http://localhost:8080/events -H "Content-Type: application/json" -d "{\"name\":\"Show A\",\"eventDate\":\"2026-10-01T20:00:00\",\"price\":100.00,\"availableQuantity\":10}"
+curl -X POST http://localhost:8081/orders -H "Content-Type: application/json" -d "{\"userId\":1,\"eventId\":1}"
+
+# 2. verify happy path first
+curl -X POST http://localhost:8081/orders/1/pay -H "Content-Type: application/json" -d "{\"paymentMethod\":\"CREDIT_CARD\",\"amount\":100.00}"
+# → {"message":"Payment processed"}
+
+# 3. create a second order for the breaker demo
+curl -X POST http://localhost:8081/orders -H "Content-Type: application/json" -d "{\"userId\":1,\"eventId\":1}"
+
+# 4. flip failure rate, pay order 2
+curl -X POST http://localhost:8090/admin/mode -H "Content-Type: application/json" -d "{\"failureRate\":1.0}"
+curl -X POST http://localhost:8081/orders/2/pay -H "Content-Type: application/json" -d "{\"paymentMethod\":\"CREDIT_CARD\",\"amount\":100.00}"
+# → {"error":"Payment service unavailable. Try again later."}
+
+# 5. recover, wait 10s, pay order 2 again
+curl -X POST http://localhost:8090/admin/mode -H "Content-Type: application/json" -d "{\"failureRate\":0.0}"
+# wait 10 seconds
+curl -X POST http://localhost:8081/orders/2/pay -H "Content-Type: application/json" -d "{\"paymentMethod\":\"CREDIT_CARD\",\"amount\":100.00}"
+# → {"message":"Payment processed"}
+
+###
 ```
 ticket-system
 ├─ docker-compose.yml

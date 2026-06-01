@@ -39,3 +39,31 @@ event-service:
 
 reservation:
   ttl-minutes: 15
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      gateway:
+        sliding-window-size: 5
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 2
+        register-health-indicator: true
+  retry:
+    instances:
+      gateway:
+        max-attempts: 3
+        wait-duration: 500ms
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - org.springframework.web.client.ResourceAccessException
+          - org.springframework.web.client.HttpServerErrorException
+        ignore-exceptions:
+          - com.tickets.order_service.order.PaymentDeclinedException
+  timelimiter:
+    instances:
+      gateway:
+        timeout-duration: 3s
+
+payment-gateway:
+  url: ${PAYMENT_GATEWAY_URL:http://localhost:8090}

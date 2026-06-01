@@ -1,84 +1,68 @@
-# Start it
-docker compose up --build
 
-# Prove load balancing:
-curl http://localhost:8000/whoami \
-curl http://localhost:8000/whoami
+# create event
+curl -X POST http://localhost:8080/events -H "Content-Type: application/json" -d "{\"name\":\"Show A\",\"eventDate\":\"2026-09-01T20:00:00\",\"price\":150.00,\"availableQuantity\":2}"
 
-# 2. Register a user:
-curl -X POST http://localhost:8000/users -H "Content-Type: application/json" -d "{\"email\":\"leo@test.com\",\"name\":\"Leonardo\"}"
+# list events
+curl http://localhost:8080/events
 
-# 3. Create an event:
-curl -X POST http://localhost:8000/events -H "Content-Type: application/json" -d "{\"name\":\"Show D\",\"eventDate\":\"2026-11-01T20:00:00\",\"price\":120.00,\"availableQuantity\":3}"
+# reserve ticket
+curl -X POST http://localhost:8080/events/1/reserve
 
-# 4. List events (note the id, usage bellow):
-curl http://localhost:8000/events
 
-# 5. Create an order (reserve a ticket):
-curl -X POST http://localhost:8000/orders -H "Content-Type: application/json" -d "{\"userId\":1,\"eventId\":1}"
+###
 
-# 6. Pay (confirms order + publishes order.confirmed):
-curl -X POST http://localhost:8000/orders/1/pay -H "Content-Type: application/json" -d "{\"paymentMethod\":\"CREDIT_CARD\",\"amount\":120.00}"
+# register a user
+curl -X POST http://localhost:8081/users -H "Content-Type: application/json" -d "{\"email\":\"leo@test.com\",\"name\":\"Leonardo\"}"
 
-# 7. Check the async notification arrived:
-curl http://localhost:8000/notifications
+# create an event with 1 ticket (on event-service)
+curl -X POST http://localhost:8080/events -H "Content-Type: application/json" -d "{\"name\":\"Show B\",\"eventDate\":\"2026-09-15T21:00:00\",\"price\":200.00,\"availableQuantity\":1}"
 
-# Circuit breaker demo (admin endpoint not routed through gateway, use 8090)
-<mark>100% failure</mark> \
+# buy the ticket
+curl -X POST http://localhost:8081/orders -H "Content-Type: application/json" -d "{\"userId\":1,\"eventId\":1}"
+
+# try to buy again = 409
+curl -X POST http://localhost:8081/orders -H "Content-Type: application/json" -d "{\"userId\":1,\"eventId\":1}"
+
+###
+
+# happy path
+curl -X POST http://localhost:8081/orders/1/pay -H "Content-Type: application/json" -d "{\"paymentMethod\":\"CREDIT_CARD\",\"amount\":200.00}"
+
+# trip the breaker = failure rate to 100%
 curl -X POST http://localhost:8090/admin/mode -H "Content-Type: application/json" -d "{\"failureRate\":1.0}"
 
-<mark>watch retries then breaker opening in logs</mark> \
-curl -X POST http://localhost:8000/orders/1/pay -H "Content-Type: application/json" -d "{\"paymentMethod\":\"CREDIT_CARD\",\"amount\":120.00}"
-
-<mark>recover</mark> \
+# recover
 curl -X POST http://localhost:8090/admin/mode -H "Content-Type: application/json" -d "{\"failureRate\":0.0}"
 
-# Oversell prevention demo (create event with quantity 1, reserve it twice, second must 409):
-curl -X POST http://localhost:8000/events -H "Content-Type: application/json" -d "{\"name\":\"Soldout\",\"eventDate\":\"2026-12-01T20:00:00\",\"price\":50.00,\"availableQuantity\":1}" 
+###
 
-curl -X POST http://localhost:8000/orders -H "Content-Type: application/json" -d "{\"userId\":1,\"eventId\":1}"
+# 1. create user, event, order fresh
+curl -X POST http://localhost:8081/users -H "Content-Type: application/json" -d "{\"email\":\"leo@test.com\",\"name\":\"Leonardo\"}"
+curl -X POST http://localhost:8080/events -H "Content-Type: application/json" -d "{\"name\":\"Show A\",\"eventDate\":\"2026-10-01T20:00:00\",\"price\":100.00,\"availableQuantity\":10}"
+curl -X POST http://localhost:8081/orders -H "Content-Type: application/json" -d "{\"userId\":1,\"eventId\":1}"
 
-curl -X POST http://localhost:8000/orders -H "Content-Type: application/json" -d "{\"userId\":1,\"eventId\":1}"
+# 2. verify happy path first
+curl -X POST http://localhost:8081/orders/1/pay -H "Content-Type: application/json" -d "{\"paymentMethod\":\"CREDIT_CARD\",\"amount\":100.00}"
+# → {"message":"Payment processed"}
 
-# http://localhost:8000 -> API Gateway (all app traffic)
-# http://localhost:9090/targets -> Prometheus (confirm all targets UP)
-# http://localhost:3000 -> Grafana (admin/admin)
-# http://localhost:15672 -> RabbitMQ management (tickets/tickets)
+# 3. create a second order for the breaker demo
+curl -X POST http://localhost:8081/orders -H "Content-Type: application/json" -d "{\"userId\":1,\"eventId\":1}"
 
-docker compose psㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ# status of all containers       \
-docker compose logs -f order-serviceㅤㅤㅤ# follow one service's logs  \
-docker compose logs -f payment-gateway-mock                            \
-docker compose downㅤㅤㅤㅤㅤㅤㅤㅤㅤ # stop everything                  \
-docker compose down -vㅤㅤㅤㅤㅤㅤㅤㅤ# stop + wipe volumes (fresh DB)
+# 4. flip failure rate, pay order 2
+curl -X POST http://localhost:8090/admin/mode -H "Content-Type: application/json" -d "{\"failureRate\":1.0}"
+curl -X POST http://localhost:8081/orders/2/pay -H "Content-Type: application/json" -d "{\"paymentMethod\":\"CREDIT_CARD\",\"amount\":100.00}"
+# → {"error":"Payment service unavailable. Try again later."}
 
+# 5. recover, wait 10s, pay order 2 again
+curl -X POST http://localhost:8090/admin/mode -H "Content-Type: application/json" -d "{\"failureRate\":0.0}"
+# wait 10 seconds
+curl -X POST http://localhost:8081/orders/2/pay -H "Content-Type: application/json" -d "{\"paymentMethod\":\"CREDIT_CARD\",\"amount\":100.00}"
+# → {"message":"Payment processed"}
+
+###
 
 ```
 ticket-system
-├─ api-gateway
-│  ├─ .mvn
-│  │  └─ wrapper
-│  │     └─ maven-wrapper.properties
-│  ├─ Dockerfile
-│  ├─ HELP.md
-│  ├─ mvnw
-│  ├─ mvnw.cmd
-│  ├─ pom.xml
-│  └─ src
-│     ├─ main
-│     │  ├─ java
-│     │  │  └─ com
-│     │  │     └─ tickets
-│     │  │        └─ api_gateway
-│     │  │           └─ ApiGatewayApplication.java
-│     │  └─ resources
-│     │     ├─ application.properties
-│     │     └─ application.yml
-│     └─ test
-│        └─ java
-│           └─ com
-│              └─ tickets
-│                 └─ api_gateway
-│                    └─ ApiGatewayApplicationTests.java
 ├─ docker-compose.yml
 ├─ event-service
 │  ├─ .mvn
@@ -104,8 +88,7 @@ ticket-system
 │  │  │  │           │  └─ InsufficientInventoryException.java
 │  │  │  │           ├─ EventServiceApplication.java
 │  │  │  │           ├─ GlobalExceptionHandler.java
-│  │  │  │           ├─ HealthController.java
-│  │  │  │           └─ InstanceController.java
+│  │  │  │           └─ HealthController.java
 │  │  │  └─ resources
 │  │  │     ├─ application.properties
 │  │  │     └─ application.yml
@@ -131,8 +114,7 @@ ticket-system
 │     │           │  └─ InsufficientInventoryException.class
 │     │           ├─ EventServiceApplication.class
 │     │           ├─ GlobalExceptionHandler.class
-│     │           ├─ HealthController.class
-│     │           └─ InstanceController.class
+│     │           └─ HealthController.class
 │     ├─ generated-sources
 │     │  └─ annotations
 │     ├─ generated-test-sources
@@ -142,8 +124,6 @@ ticket-system
 │           └─ tickets
 │              └─ event_service
 │                 └─ EventServiceApplicationTests.class
-├─ nginx
-│  └─ nginx.conf
 ├─ notification-service
 │  ├─ .mvn
 │  │  └─ wrapper
@@ -196,7 +176,6 @@ ticket-system
 │           └─ tickets
 │              └─ notification_service
 │                 └─ NotificationServiceApplicationTests.class
-├─ old.md
 ├─ order-service
 │  ├─ .mvn
 │  │  └─ wrapper
@@ -216,13 +195,10 @@ ticket-system
 │  │  │  │           ├─ order
 │  │  │  │           │  ├─ CreateOrderRequest.java
 │  │  │  │           │  ├─ EventServiceClient.java
-│  │  │  │           │  ├─ GatewayUnavailableException.java
 │  │  │  │           │  ├─ InsufficientInventoryException.java
-│  │  │  │           │  ├─ InvalidOrderStateException.java
 │  │  │  │           │  ├─ Order.java
 │  │  │  │           │  ├─ OrderConfirmedEvent.java
 │  │  │  │           │  ├─ OrderController.java
-│  │  │  │           │  ├─ OrderNotFoundException.java
 │  │  │  │           │  ├─ OrderRepository.java
 │  │  │  │           │  ├─ OrderService.java
 │  │  │  │           │  ├─ PaymentDeclinedException.java
@@ -254,14 +230,11 @@ ticket-system
 │     │           ├─ order
 │     │           │  ├─ CreateOrderRequest.class
 │     │           │  ├─ EventServiceClient.class
-│     │           │  ├─ GatewayUnavailableException.class
 │     │           │  ├─ InsufficientInventoryException.class
-│     │           │  ├─ InvalidOrderStateException.class
 │     │           │  ├─ Order$Status.class
 │     │           │  ├─ Order.class
 │     │           │  ├─ OrderConfirmedEvent.class
 │     │           │  ├─ OrderController.class
-│     │           │  ├─ OrderNotFoundException.class
 │     │           │  ├─ OrderRepository.class
 │     │           │  ├─ OrderService.class
 │     │           │  ├─ PaymentDeclinedException.class
@@ -332,6 +305,7 @@ ticket-system
 │                 └─ PaymentGatewayMockApplicationTests.class
 ├─ prometheus
 │  └─ prometheus.yml
-└─ README.md
+├─ README.md
+└─ test.md
 
 ```

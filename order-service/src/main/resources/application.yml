@@ -60,6 +60,8 @@ resilience4j:
           - org.springframework.web.client.HttpServerErrorException
         ignore-exceptions:
           - com.tickets.order_service.order.PaymentDeclinedException
+          - com.tickets.order_service.order.OrderNotFoundException
+          - com.tickets.order_service.order.InvalidOrderStateException
   timelimiter:
     instances:
       gateway:

@@ -24,7 +24,7 @@ public class NotificationConsumer {
 
         // idempotency check, "at-least-once" = this can arrive twice
         if (repository.existsById(event.orderId())) {
-            log.warn("Email already sent for order {} — skipping duplicate", event.orderId());
+            log.warn("Email already sent for order {}; skipping duplicate", event.orderId());
             return;
         }
 

@@ -1,5 +1,6 @@
 package com.tickets.notification_service;
 
-public class SentEmailRepository {
-    
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface SentEmailRepository extends JpaRepository<SentEmail, Long> {
 }

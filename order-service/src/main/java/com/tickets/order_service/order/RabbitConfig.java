@@ -15,6 +15,9 @@ public class RabbitConfig {
     public static final String ORDER_CONFIRMED_QUEUE = "order.confirmed.queue";
     public static final String ORDER_CONFIRMED_ROUTING_KEY = "order.confirmed";
 
+    public static final String DLX = "tickets.dlx";
+    public static final String DLQ = "order.confirmed.dlq";
+
     @Bean
     public TopicExchange ticketsExchange() {
         return new TopicExchange(EXCHANGE);
@@ -22,7 +25,10 @@ public class RabbitConfig {
 
     @Bean
     public Queue orderConfirmedQueue() {
-        return QueueBuilder.durable(ORDER_CONFIRMED_QUEUE).build();
+        return QueueBuilder.durable(ORDER_CONFIRMED_QUEUE)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", DLQ)
+                .build();
     }
 
     @Bean

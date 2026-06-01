@@ -16,7 +16,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop   # creates schema on start, drops on stop
-    show-sql: true            # logs every query — you want to see the UPDATE fire
+    show-sql: true            # logs every query to see the UPDATE fire
     properties:
       hibernate:
         format_sql: true
@@ -29,7 +29,7 @@ management:
   endpoint:
     health:
       show-details: always
-  metrics:
-    export:
-      prometheus:
+  prometheus:
+    metrics:
+      export: 
         enabled: true

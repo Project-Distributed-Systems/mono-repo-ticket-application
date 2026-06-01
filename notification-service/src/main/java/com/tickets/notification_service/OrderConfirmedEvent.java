@@ -1,5 +1,9 @@
 package com.tickets.notification_service;
 
-public class OrderConfirmedEvent {
-    
-}
+import java.io.Serializable;
+
+public record OrderConfirmedEvent(
+    Long orderId,
+    Long userId,
+    Long eventId
+) implements Serializable {}

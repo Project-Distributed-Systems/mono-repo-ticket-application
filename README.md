@@ -23,31 +23,148 @@ curl -X POST http://localhost:8081/orders -H "Content-Type: application/json" -d
 # try to buy again = 409
 curl -X POST http://localhost:8081/orders -H "Content-Type: application/json" -d "{\"userId\":1,\"eventId\":1}"
 
+###
 
+```
+ticket-system
+├─ docker-compose.yml
+├─ event-service
+│  ├─ .mvn
+│  │  └─ wrapper
+│  │     └─ maven-wrapper.properties
+│  ├─ Dockerfile
+│  ├─ HELP.md
+│  ├─ mvnw
+│  ├─ mvnw.cmd
+│  ├─ pom.xml
+│  ├─ src
+│  │  ├─ main
+│  │  │  ├─ java
+│  │  │  │  └─ com
+│  │  │  │     └─ tickets
+│  │  │  │        └─ event_service
+│  │  │  │           ├─ event
+│  │  │  │           │  ├─ CreateEventRequest.java
+│  │  │  │           │  ├─ Event.java
+│  │  │  │           │  ├─ EventController.java
+│  │  │  │           │  ├─ EventRepository.java
+│  │  │  │           │  ├─ EventService.java
+│  │  │  │           │  └─ InsufficientInventoryException.java
+│  │  │  │           ├─ EventServiceApplication.java
+│  │  │  │           ├─ GlobalExceptionHandler.java
+│  │  │  │           └─ HealthController.java
+│  │  │  └─ resources
+│  │  │     ├─ application.properties
+│  │  │     ├─ application.yml
+│  │  │     ├─ static
+│  │  │     └─ templates
+│  │  └─ test
+│  │     └─ java
+│  │        └─ com
+│  │           └─ tickets
+│  │              └─ event_service
+│  │                 └─ EventServiceApplicationTests.java
+│  └─ target
+│     ├─ classes
+│     │  ├─ application.properties
+│     │  ├─ application.yml
+│     │  └─ com
+│     │     └─ tickets
+│     │        └─ event_service
+│     │           ├─ event
+│     │           │  ├─ CreateEventRequest.class
+│     │           │  ├─ Event.class
+│     │           │  ├─ EventController.class
+│     │           │  ├─ EventRepository.class
+│     │           │  ├─ EventService.class
+│     │           │  └─ InsufficientInventoryException.class
+│     │           ├─ EventServiceApplication.class
+│     │           ├─ GlobalExceptionHandler.class
+│     │           └─ HealthController.class
+│     ├─ generated-sources
+│     │  └─ annotations
+│     ├─ generated-test-sources
+│     │  └─ test-annotations
+│     └─ test-classes
+│        └─ com
+│           └─ tickets
+│              └─ event_service
+│                 └─ EventServiceApplicationTests.class
+├─ order-service
+│  ├─ .mvn
+│  │  └─ wrapper
+│  │     └─ maven-wrapper.properties
+│  ├─ Dockerfile
+│  ├─ HELP.md
+│  ├─ mvnw
+│  ├─ mvnw.cmd
+│  ├─ pom.xml
+│  ├─ src
+│  │  ├─ main
+│  │  │  ├─ java
+│  │  │  │  └─ com
+│  │  │  │     └─ tickets
+│  │  │  │        └─ order_service
+│  │  │  │           ├─ GlobalExceptionHandler.java
+│  │  │  │           ├─ order
+│  │  │  │           │  ├─ CreateOrderRequest.java
+│  │  │  │           │  ├─ EventServiceClient.java
+│  │  │  │           │  ├─ InsufficientInventoryException.java
+│  │  │  │           │  ├─ Order.java
+│  │  │  │           │  ├─ OrderController.java
+│  │  │  │           │  ├─ OrderRepository.java
+│  │  │  │           │  └─ OrderService.java
+│  │  │  │           ├─ OrderServiceApplication.java
+│  │  │  │           └─ user
+│  │  │  │              ├─ User.java
+│  │  │  │              ├─ UserController.java
+│  │  │  │              ├─ UserRepository.java
+│  │  │  │              └─ UserService.java
+│  │  │  └─ resources
+│  │  │     ├─ application.properties
+│  │  │     ├─ application.yml
+│  │  │     ├─ static
+│  │  │     └─ templates
+│  │  └─ test
+│  │     └─ java
+│  │        └─ com
+│  │           └─ tickets
+│  │              └─ order_service
+│  │                 └─ OrderServiceApplicationTests.java
+│  └─ target
+│     ├─ classes
+│     │  ├─ application.properties
+│     │  ├─ application.yml
+│     │  └─ com
+│     │     └─ tickets
+│     │        └─ order_service
+│     │           ├─ GlobalExceptionHandler.class
+│     │           ├─ order
+│     │           │  ├─ CreateOrderRequest.class
+│     │           │  ├─ EventServiceClient.class
+│     │           │  ├─ InsufficientInventoryException.class
+│     │           │  ├─ Order$Status.class
+│     │           │  ├─ Order.class
+│     │           │  ├─ OrderController.class
+│     │           │  ├─ OrderRepository.class
+│     │           │  └─ OrderService.class
+│     │           ├─ OrderServiceApplication.class
+│     │           └─ user
+│     │              ├─ User.class
+│     │              ├─ UserController.class
+│     │              ├─ UserRepository.class
+│     │              └─ UserService.class
+│     ├─ generated-sources
+│     │  └─ annotations
+│     ├─ generated-test-sources
+│     │  └─ test-annotations
+│     └─ test-classes
+│        └─ com
+│           └─ tickets
+│              └─ order_service
+│                 └─ OrderServiceApplicationTests.class
+├─ prometheus
+│  └─ prometheus.yml
+└─ README.md
 
-ticket-system/
-├── docker-compose.yml
-├── prometheus/
-│   └── prometheus.yml
-├── event-service/
-└── order-service/          ← new
-    ├── Dockerfile
-    ├── pom.xml
-    └── src/main/
-        ├── java/com/tickets/orderservice/
-        │   ├── OrderServiceApplication.java
-        │   ├── GlobalExceptionHandler.java
-        │   ├── user/
-        │   │   ├── User.java
-        │   │   ├── UserRepository.java
-        │   │   ├── UserService.java
-        │   │   └── UserController.java
-        │   └── order/
-        │       ├── Order.java
-        │       ├── OrderRepository.java
-        │       ├── OrderService.java
-        │       ├── OrderController.java
-        │       ├── CreateOrderRequest.java
-        │       └── EventServiceClient.java
-        └── resources/
-            application.yml
+```

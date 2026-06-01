@@ -51,6 +51,20 @@ docker compose logs -f payment-gateway-mock                            \
 docker compose downㅤㅤㅤㅤㅤㅤㅤㅤㅤ # stop everything                  \
 docker compose down -vㅤㅤㅤㅤㅤㅤㅤㅤ# stop + wipe volumes (fresh DB)
 
+## Grafana -> Dashboards -> New -> Add visualization -> Select Prometheus -> Paste The Query -> Set a Title -> Apply
+
+### Latency (95th percentile, seconds):
+rate(http_server_requests_seconds_count[1m])
+
+### Latency (95th percentile, seconds):
+histogram_quantile(0.95, rate(http_server_requests_seconds_bucket[1m]))
+
+### Error rate (non-2xx responses per second):
+rate(http_server_requests_seconds_count{status=~"5.."}[1m])
+
+### Custom business metric:
+tickets_sold_total
+
 
 ```
 ticket-system
@@ -95,6 +109,7 @@ ticket-system
 │  │  │  │  └─ com
 │  │  │  │     └─ tickets
 │  │  │  │        └─ event_service
+│  │  │  │           ├─ CorrelationIdFilter.java
 │  │  │  │           ├─ event
 │  │  │  │           │  ├─ CreateEventRequest.java
 │  │  │  │           │  ├─ Event.java
@@ -108,7 +123,8 @@ ticket-system
 │  │  │  │           └─ InstanceController.java
 │  │  │  └─ resources
 │  │  │     ├─ application.properties
-│  │  │     └─ application.yml
+│  │  │     ├─ application.yml
+│  │  │     └─ logback-spring.xml
 │  │  └─ test
 │  │     └─ java
 │  │        └─ com
@@ -119,20 +135,22 @@ ticket-system
 │     ├─ classes
 │     │  ├─ application.properties
 │     │  ├─ application.yml
-│     │  └─ com
-│     │     └─ tickets
-│     │        └─ event_service
-│     │           ├─ event
-│     │           │  ├─ CreateEventRequest.class
-│     │           │  ├─ Event.class
-│     │           │  ├─ EventController.class
-│     │           │  ├─ EventRepository.class
-│     │           │  ├─ EventService.class
-│     │           │  └─ InsufficientInventoryException.class
-│     │           ├─ EventServiceApplication.class
-│     │           ├─ GlobalExceptionHandler.class
-│     │           ├─ HealthController.class
-│     │           └─ InstanceController.class
+│     │  ├─ com
+│     │  │  └─ tickets
+│     │  │     └─ event_service
+│     │  │        ├─ CorrelationIdFilter.class
+│     │  │        ├─ event
+│     │  │        │  ├─ CreateEventRequest.class
+│     │  │        │  ├─ Event.class
+│     │  │        │  ├─ EventController.class
+│     │  │        │  ├─ EventRepository.class
+│     │  │        │  ├─ EventService.class
+│     │  │        │  └─ InsufficientInventoryException.class
+│     │  │        ├─ EventServiceApplication.class
+│     │  │        ├─ GlobalExceptionHandler.class
+│     │  │        ├─ HealthController.class
+│     │  │        └─ InstanceController.class
+│     │  └─ logback-spring.xml
 │     ├─ generated-sources
 │     │  └─ annotations
 │     ├─ generated-test-sources
@@ -142,6 +160,10 @@ ticket-system
 │           └─ tickets
 │              └─ event_service
 │                 └─ EventServiceApplicationTests.class
+├─ grafana
+│  └─ provisioning
+│     └─ datasources
+│        └─ datasource.yml
 ├─ nginx
 │  └─ nginx.conf
 ├─ notification-service
@@ -159,6 +181,7 @@ ticket-system
 │  │  │  │  └─ com
 │  │  │  │     └─ tickets
 │  │  │  │        └─ notification_service
+│  │  │  │           ├─ CorrelationIdFilter.java
 │  │  │  │           ├─ NotificationConsumer.java
 │  │  │  │           ├─ NotificationController.java
 │  │  │  │           ├─ NotificationServiceApplication.java
@@ -169,6 +192,7 @@ ticket-system
 │  │  │  └─ resources
 │  │  │     ├─ application.properties
 │  │  │     ├─ application.yml
+│  │  │     ├─ logback-spring.xml
 │  │  │     ├─ static
 │  │  │     └─ templates
 │  │  └─ test
@@ -181,16 +205,18 @@ ticket-system
 │     ├─ classes
 │     │  ├─ application.properties
 │     │  ├─ application.yml
-│     │  └─ com
-│     │     └─ tickets
-│     │        └─ notification_service
-│     │           ├─ NotificationConsumer.class
-│     │           ├─ NotificationController.class
-│     │           ├─ NotificationServiceApplication.class
-│     │           ├─ OrderConfirmedEvent.class
-│     │           ├─ RabbitConfig.class
-│     │           ├─ SentEmail.class
-│     │           └─ SentEmailRepository.class
+│     │  ├─ com
+│     │  │  └─ tickets
+│     │  │     └─ notification_service
+│     │  │        ├─ CorrelationIdFilter.class
+│     │  │        ├─ NotificationConsumer.class
+│     │  │        ├─ NotificationController.class
+│     │  │        ├─ NotificationServiceApplication.class
+│     │  │        ├─ OrderConfirmedEvent.class
+│     │  │        ├─ RabbitConfig.class
+│     │  │        ├─ SentEmail.class
+│     │  │        └─ SentEmailRepository.class
+│     │  └─ logback-spring.xml
 │     └─ test-classes
 │        └─ com
 │           └─ tickets
@@ -212,6 +238,7 @@ ticket-system
 │  │  │  │  └─ com
 │  │  │  │     └─ tickets
 │  │  │  │        └─ order_service
+│  │  │  │           ├─ CorrelationIdFilter.java
 │  │  │  │           ├─ GlobalExceptionHandler.java
 │  │  │  │           ├─ order
 │  │  │  │           │  ├─ CreateOrderRequest.java
@@ -236,7 +263,8 @@ ticket-system
 │  │  │  │              └─ UserService.java
 │  │  │  └─ resources
 │  │  │     ├─ application.properties
-│  │  │     └─ application.yml
+│  │  │     ├─ application.yml
+│  │  │     └─ logback-spring.xml
 │  │  └─ test
 │  │     └─ java
 │  │        └─ com
@@ -247,32 +275,34 @@ ticket-system
 │     ├─ classes
 │     │  ├─ application.properties
 │     │  ├─ application.yml
-│     │  └─ com
-│     │     └─ tickets
-│     │        └─ order_service
-│     │           ├─ GlobalExceptionHandler.class
-│     │           ├─ order
-│     │           │  ├─ CreateOrderRequest.class
-│     │           │  ├─ EventServiceClient.class
-│     │           │  ├─ GatewayUnavailableException.class
-│     │           │  ├─ InsufficientInventoryException.class
-│     │           │  ├─ InvalidOrderStateException.class
-│     │           │  ├─ Order$Status.class
-│     │           │  ├─ Order.class
-│     │           │  ├─ OrderConfirmedEvent.class
-│     │           │  ├─ OrderController.class
-│     │           │  ├─ OrderNotFoundException.class
-│     │           │  ├─ OrderRepository.class
-│     │           │  ├─ OrderService.class
-│     │           │  ├─ PaymentDeclinedException.class
-│     │           │  ├─ PaymentService.class
-│     │           │  └─ RabbitConfig.class
-│     │           ├─ OrderServiceApplication.class
-│     │           └─ user
-│     │              ├─ User.class
-│     │              ├─ UserController.class
-│     │              ├─ UserRepository.class
-│     │              └─ UserService.class
+│     │  ├─ com
+│     │  │  └─ tickets
+│     │  │     └─ order_service
+│     │  │        ├─ CorrelationIdFilter.class
+│     │  │        ├─ GlobalExceptionHandler.class
+│     │  │        ├─ order
+│     │  │        │  ├─ CreateOrderRequest.class
+│     │  │        │  ├─ EventServiceClient.class
+│     │  │        │  ├─ GatewayUnavailableException.class
+│     │  │        │  ├─ InsufficientInventoryException.class
+│     │  │        │  ├─ InvalidOrderStateException.class
+│     │  │        │  ├─ Order$Status.class
+│     │  │        │  ├─ Order.class
+│     │  │        │  ├─ OrderConfirmedEvent.class
+│     │  │        │  ├─ OrderController.class
+│     │  │        │  ├─ OrderNotFoundException.class
+│     │  │        │  ├─ OrderRepository.class
+│     │  │        │  ├─ OrderService.class
+│     │  │        │  ├─ PaymentDeclinedException.class
+│     │  │        │  ├─ PaymentService.class
+│     │  │        │  └─ RabbitConfig.class
+│     │  │        ├─ OrderServiceApplication.class
+│     │  │        └─ user
+│     │  │           ├─ User.class
+│     │  │           ├─ UserController.class
+│     │  │           ├─ UserRepository.class
+│     │  │           └─ UserService.class
+│     │  └─ logback-spring.xml
 │     ├─ generated-sources
 │     │  └─ annotations
 │     ├─ generated-test-sources
@@ -305,7 +335,8 @@ ticket-system
 │  │  │  │           └─ PaymentGatewayMockApplication.java
 │  │  │  └─ resources
 │  │  │     ├─ application.properties
-│  │  │     └─ application.yml
+│  │  │     ├─ application.yml
+│  │  │     └─ logback-spring.xml
 │  │  └─ test
 │  │     └─ java
 │  │        └─ com
@@ -316,15 +347,16 @@ ticket-system
 │     ├─ classes
 │     │  ├─ application.properties
 │     │  ├─ application.yml
-│     │  └─ com
-│     │     └─ tickets
-│     │        └─ payment_gateway_mock
-│     │           ├─ AdminController.class
-│     │           ├─ ChargeController.class
-│     │           ├─ ChargeRequest.class
-│     │           ├─ ChargeResponse.class
-│     │           ├─ GatewayConfig.class
-│     │           └─ PaymentGatewayMockApplication.class
+│     │  ├─ com
+│     │  │  └─ tickets
+│     │  │     └─ payment_gateway_mock
+│     │  │        ├─ AdminController.class
+│     │  │        ├─ ChargeController.class
+│     │  │        ├─ ChargeRequest.class
+│     │  │        ├─ ChargeResponse.class
+│     │  │        ├─ GatewayConfig.class
+│     │  │        └─ PaymentGatewayMockApplication.class
+│     │  └─ logback-spring.xml
 │     └─ test-classes
 │        └─ com
 │           └─ tickets

@@ -119,6 +119,7 @@ services:
       RABBITMQ_USER: tickets
       RABBITMQ_PASS: tickets
       EVENT_SERVICE_URL: http://event-service:8080
+      PAYMENT_GATEWAY_URL: http://payment-gateway-mock:8090
     ports:
       - "8081:8081"
     networks:
@@ -136,3 +137,19 @@ services:
       timeout: 5s
       retries: 10
       start_period: 40s
+
+  payment-gateway-mock:
+    build:
+      context: ./payment-gateway-mock
+      dockerfile: Dockerfile
+    container_name: payment-gateway-mock
+    ports:
+      - "8090:8090"
+    networks:
+      - tickets-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8090/admin/mode || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s

@@ -1,0 +1,7 @@
+server:
+    port: 8090
+
+gateway:
+    failure-rate: 0.0      # fraction of requests that return 503
+    latency-ms: 100        # base latency
+    decline-rate: 0.0      # fraction that return 200 DECLINED (business decline)

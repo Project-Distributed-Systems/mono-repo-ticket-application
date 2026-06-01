@@ -136,3 +136,19 @@ services:
       timeout: 5s
       retries: 10
       start_period: 40s
+
+  payment-gateway-mock:
+    build:
+      context: ./payment-gateway-mock
+      dockerfile: Dockerfile
+    container_name: payment-gateway-mock
+    ports:
+      - "8090:8090"
+    networks:
+      - tickets-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8090/admin/mode || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s

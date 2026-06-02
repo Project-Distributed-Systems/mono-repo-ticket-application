@@ -1,0 +1,74 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: order-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:tickets}
+    username: ${DB_USER:tickets}
+    password: ${DB_PASS:tickets}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: 5672
+    username: ${RABBITMQ_USER:tickets}
+    password: ${RABBITMQ_PASS:tickets}
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: always
+  prometheus:
+    metrics:
+      export: 
+        enabled: true
+      distribution:
+        percentiles-histogram:
+          http.server.requests: true
+
+event-service:
+  url: ${EVENT_SERVICE_URL:http://localhost:8080}
+
+reservation:
+  ttl-minutes: 15
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      gateway:
+        sliding-window-size: 5
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 2
+        register-health-indicator: true
+  retry:
+    instances:
+      gateway:
+        max-attempts: 3
+        wait-duration: 500ms
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - org.springframework.web.client.ResourceAccessException
+          - org.springframework.web.client.HttpServerErrorException
+        ignore-exceptions:
+          - com.tickets.order_service.order.PaymentDeclinedException
+          - com.tickets.order_service.order.OrderNotFoundException
+          - com.tickets.order_service.order.InvalidOrderStateException
+  timelimiter:
+    instances:
+      gateway:
+        timeout-duration: 3s
+
+payment-gateway:
+  url: ${PAYMENT_GATEWAY_URL:http://localhost:8090}

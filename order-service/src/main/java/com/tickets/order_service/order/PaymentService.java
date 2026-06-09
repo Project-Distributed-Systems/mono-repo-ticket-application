@@ -52,7 +52,13 @@ public class PaymentService {
     @Retry(name = "gateway")
     public void processPayment(Long orderId, String paymentMethod, BigDecimal amount) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(orderId));
+                .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+
+        // idempotency guard; already confirmed orders are no op
+        if (order.getStatus() == Order.Status.CONFIRMED) {
+            log.info("Order {} already confirmed — skipping duplicate payment", orderId);
+            return;
+        }
 
         // entry guard: only PENDING orders can be paid
         if (order.getStatus() != Order.Status.PENDING) {

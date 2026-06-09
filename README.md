@@ -79,3 +79,30 @@ recover \
 `tickets_sold_total`
 
 
+#### scenario:
+a client fires a payment, the network drops mid-flight (client never sees the response), the client retries with the same key; and the system ends with exactly one charge and one ticket.
+
+set up fresh order
+`curl -X POST http://localhost:8000/events -H "Content-Type: application/json" -d "{\"name\":\"Idem Test\",\"eventDate\":\"2026-12-20T20:00:00\",\"price\":90.00,\"availableQuantity\":5}"`
+`curl -X POST http://localhost:8000/orders -H "Content-Type: application/json" -d "{\"userId\":1,\"eventId\":1}"`
+
+make the gateway slow so you have time to kill the request
+`curl -X POST http://localhost:8090/admin/mode -H "Content-Type: application/json" -d "{\"latencyMs\":8000}"`
+
+fire the payment, then hit Ctrl+C after ~2 seconds; client abandons, but the charge may have landed
+`curl -X POST http://localhost:8000/orders/1/pay -H "Content-Type: application/json" -d "{\"paymentMethod\":\"CREDIT_CARD\",\"amount\":90.00}"`
+^C
+
+Reset latency and retry the exact same payment (same order -> same idempotency key):
+`curl -X POST http://localhost:8090/admin/mode -H "Content-Type: application/json" -d "{\"latencyMs\":100}"`
+`curl -X POST http://localhost:8000/orders/1/pay -H "Content-Type: application/json" -d "{\"paymentMethod\":\"CREDIT_CARD\",\"amount\":90.00}"`
+
+Now prove the end state; exactly one of everything:
+order is CONFIRMED, not double-processed
+`curl http://localhost:8000/orders/1`
+
+exactly one email
+`curl http://localhost:8000/notifications`
+
+inventory decremented exactly once (started at 5, should be 4)
+`curl http://localhost:8000/events`

@@ -2,6 +2,9 @@ server:
     port: 8090
 
 gateway:
-    failure-rate: 0.0      # fraction of requests that return 503
-    latency-ms: 100        # base latency
-    decline-rate: 0.0      # fraction that return 200 DECLINED (business decline)
+    failure-rate: 0.0
+    latency-ms: 100
+    decline-rate: 0.0
+    webhook-delay-ms: 5000
+    confirm-rate: 1.0
+    order-service-url: ${ORDER_SERVICE_URL:http://localhost:8081}

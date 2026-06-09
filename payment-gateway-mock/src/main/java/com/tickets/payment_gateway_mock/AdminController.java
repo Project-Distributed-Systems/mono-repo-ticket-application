@@ -22,12 +22,12 @@ public class AdminController {
             config.latencyMs = ((Number) body.get("latencyMs")).longValue();
         if (body.containsKey("declineRate"))
             config.declineRate = ((Number) body.get("declineRate")).doubleValue();
+        if (body.containsKey("webhookDelayMs"))
+            config.webhookDelayMs = ((Number) body.get("webhookDelayMs")).longValue();
+        if (body.containsKey("confirmRate"))
+            config.confirmRate = ((Number) body.get("confirmRate")).doubleValue();
 
-        return Map.of(
-            "failureRate", config.failureRate,
-            "latencyMs", config.latencyMs,
-            "declineRate", config.declineRate
-        );
+        return getMode();
     }
 
     @GetMapping("/mode")
@@ -35,7 +35,9 @@ public class AdminController {
         return Map.of(
             "failureRate", config.failureRate,
             "latencyMs", config.latencyMs,
-            "declineRate", config.declineRate
+            "declineRate", config.declineRate,
+            "webhookDelayMs", config.webhookDelayMs,
+            "confirmRate", config.confirmRate
         );
     }
 }

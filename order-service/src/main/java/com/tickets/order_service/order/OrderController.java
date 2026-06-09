@@ -37,13 +37,10 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/pay")
-    public ResponseEntity<Map<String, String>> pay(
-            @PathVariable Long id,
-            @RequestBody Map<String, Object> body) {
-
+    public ResponseEntity<PaymentService.PaymentResult> pay(
+            @PathVariable Long id, @RequestBody Map<String, Object> body) {
         String method = (String) body.get("paymentMethod");
         BigDecimal amount = new BigDecimal(body.get("amount").toString());
-        paymentService.processPayment(id, method, amount);
-        return ResponseEntity.ok(Map.of("message", "Payment processed"));
+        return ResponseEntity.ok(paymentService.processPayment(id, method, amount));
     }
 }

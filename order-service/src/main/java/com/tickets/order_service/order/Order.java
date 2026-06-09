@@ -34,6 +34,12 @@ public class Order {
     @Column(nullable = false)
     private LocalDateTime expiresAt;
 
+    @Column
+    private String paymentMethod;   // CREDIT_CARD, PIX, BOLETO; null until payment initiated
+
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
     public Order() {}
 
     public Order(Long userId, Long eventId, LocalDateTime createdAt, LocalDateTime expiresAt) {

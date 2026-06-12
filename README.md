@@ -30,7 +30,7 @@ an explanation of what each piece does and what the expected response is.
 
 1. [Anatomy of a `curl` command](#1-anatomy-of-a-curl-command)
 2. [The request/response model](#2-the-requestresponse-model)
-3. [Topology; who lives where](#3-topology;-who-lives-where)
+3. [Topology; who lives where](#3-topology-who-lives-where)
 4. [Ports & URLs cheat-sheet](#4-ports--urls-cheat-sheet)
 5. [Lifecycle commands (Docker)](#5-lifecycle-commands-docker)
 6. [Token & shell-variable handling](#6-token--shell-variable-handling)
